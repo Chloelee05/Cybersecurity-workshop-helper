@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "사이버보안 워크샵",
-  description: "Kahoot 스타일의 사이버보안 워크샵 퀴즈 시스템",
+  title: "SIM-CSC Workshop",
+  description: "SIM-CSC Workshop",
 };
 
 export default function RootLayout({
