@@ -1,5 +1,6 @@
 # Cybersecurity Workshop - Kahoot-like Quiz Application
 
+URL : https://cybersecurity-workshop-helper.vercel.app/
 A modern, real-time quiz application built with Next.js, designed for cybersecurity workshops and interactive learning sessions. This application allows administrators to create sessions, manage participants, and conduct timed quizzes with live leaderboards.
 
 ## Features
@@ -325,14 +326,3 @@ The application uses Tailwind CSS. Modify classes in component files or extend t
 - Consider implementing proper authentication for production
 - Enable RLS policies in Supabase for additional security
 
-## License
-
-[Add your license here]
-
-## Contributing
-
-[Add contribution guidelines here]
-
-## Support
-
-For issues and questions, please open an issue on GitHub.
