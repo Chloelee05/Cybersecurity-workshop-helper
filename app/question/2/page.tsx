@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function Question2() {
+function Question2Content() {
   const [answer, setAnswer] = useState('');
   const [error, setError] = useState('');
   const [startTime, setStartTime] = useState<number | null>(null);
@@ -13,7 +13,7 @@ export default function Question2() {
   const [timeLimit, setTimeLimit] = useState<number | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const sessionCode = searchParams.get('session') || sessionStorage.getItem('sessionCode') || '';
+  const sessionCode = searchParams.get('session') || (typeof window !== 'undefined' ? sessionStorage.getItem('sessionCode') : '') || '';
 
   // Correct answer (update as needed)
   const correctAnswer = 'ANSWER2'; // Change this to your actual answer
@@ -25,7 +25,7 @@ export default function Question2() {
     }
 
     // Check if user already submitted - if so, go to correct page
-    const hasSubmitted = sessionStorage.getItem(`submitted_${sessionCode}_q2`);
+    const hasSubmitted = typeof window !== 'undefined' ? sessionStorage.getItem(`submitted_${sessionCode}_q2`) : null;
     if (hasSubmitted) {
       router.push(`/correct/2?session=${sessionCode}`);
       return;
@@ -34,7 +34,7 @@ export default function Question2() {
     // Check session status and get time limit
     const checkStatus = async () => {
       try {
-        const currentUserName = sessionStorage.getItem('userName');
+        const currentUserName = typeof window !== 'undefined' ? sessionStorage.getItem('userName') : null;
         const response = await fetch(`/api/session?code=${sessionCode}`);
         if (response.ok) {
           const data = await response.json();
@@ -46,9 +46,11 @@ export default function Question2() {
           
           if (!isUserParticipant && currentUserName) {
             // User was kicked
-            sessionStorage.setItem('kicked', 'true');
-            sessionStorage.removeItem('sessionCode');
-            sessionStorage.removeItem('userName');
+            if (typeof window !== 'undefined') {
+              sessionStorage.setItem('kicked', 'true');
+              sessionStorage.removeItem('sessionCode');
+              sessionStorage.removeItem('userName');
+            }
             router.push('/waiting');
             return;
           }
@@ -137,7 +139,7 @@ export default function Question2() {
 
     // Calculate time and save result
     const timeTaken = startTime ? Date.now() - startTime : 0;
-    const userName = sessionStorage.getItem('userName') || 'Anonymous';
+    const userName = (typeof window !== 'undefined' ? sessionStorage.getItem('userName') : null) || 'Anonymous';
 
     try {
       // Submit result to API
@@ -157,7 +159,9 @@ export default function Question2() {
 
       if (response.ok) {
         // Save to sessionStorage that this user has submitted
-        sessionStorage.setItem(`submitted_${sessionCode}_q2`, 'true');
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem(`submitted_${sessionCode}_q2`, 'true');
+        }
         // Redirect to correct page (waiting for admin)
         router.push(`/correct/2?session=${sessionCode}`);
       } else {
@@ -230,5 +234,24 @@ export default function Question2() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function Question2() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-green-500 via-teal-500 to-cyan-500">
+        <main className="flex w-full max-w-2xl flex-col items-center justify-center px-8 py-12">
+          <div className="w-full rounded-2xl bg-white p-8 shadow-2xl">
+            <div className="text-center">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mb-4"></div>
+              <p className="text-gray-600">Loading...</p>
+            </div>
+          </div>
+        </main>
+      </div>
+    }>
+      <Question2Content />
+    </Suspense>
   );
 }

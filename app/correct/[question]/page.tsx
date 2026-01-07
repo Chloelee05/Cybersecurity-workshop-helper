@@ -1,14 +1,14 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams, useParams } from 'next/navigation';
 
-export default function CorrectPage() {
+function CorrectPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const params = useParams();
   const questionNumber = parseInt(params.question as string) || 1;
-  const sessionCode = searchParams.get('session') || sessionStorage.getItem('sessionCode') || '';
+  const sessionCode = searchParams.get('session') || (typeof window !== 'undefined' ? sessionStorage.getItem('sessionCode') : '') || '';
 
   useEffect(() => {
     if (!sessionCode) {
@@ -19,7 +19,7 @@ export default function CorrectPage() {
     // Check session status - if admin shows dashboard, redirect there
     const checkStatus = async () => {
       try {
-        const currentUserName = sessionStorage.getItem('userName');
+        const currentUserName = typeof window !== 'undefined' ? sessionStorage.getItem('userName') : null;
         const response = await fetch(`/api/session?code=${sessionCode}`);
         if (response.ok) {
           const data = await response.json();
@@ -31,9 +31,11 @@ export default function CorrectPage() {
           
           if (!isUserParticipant && currentUserName) {
             // User was kicked
-            sessionStorage.setItem('kicked', 'true');
-            sessionStorage.removeItem('sessionCode');
-            sessionStorage.removeItem('userName');
+            if (typeof window !== 'undefined') {
+              sessionStorage.setItem('kicked', 'true');
+              sessionStorage.removeItem('sessionCode');
+              sessionStorage.removeItem('userName');
+            }
             router.push('/waiting');
             return;
           }
@@ -82,3 +84,21 @@ export default function CorrectPage() {
   );
 }
 
+export default function CorrectPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-green-500 via-teal-500 to-cyan-500">
+        <main className="flex w-full max-w-2xl flex-col items-center justify-center px-8 py-12">
+          <div className="w-full rounded-2xl bg-white p-8 shadow-2xl">
+            <div className="text-center">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mb-4"></div>
+              <p className="text-gray-600">Loading...</p>
+            </div>
+          </div>
+        </main>
+      </div>
+    }>
+      <CorrectPageContent />
+    </Suspense>
+  );
+}
